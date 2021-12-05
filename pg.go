@@ -99,10 +99,23 @@ func (m *postgresStorage) Users() ([]User, error) {
 }
 
 func NewPGStorage() postgresStorage {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	ctx := context.Background()
+
+	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
+	}
+
+	_, err = conn.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS users (
+		id INT PRIMARY KEY,
+		name VARCHAR(255),
+		days_without_weed INT,
+		karma INT
+	);`)
+	if err != nil {
+		panic(err)
 	}
 
 	return postgresStorage{
