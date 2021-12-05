@@ -53,7 +53,7 @@ func main() {
 
 				log.Printf("New user added %s", userName)
 
-				send(userID, ot)
+				go send(userID, ot)
 			}
 
 			if u.Message.Text == "/get_user" {
