@@ -4,21 +4,23 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
 	tgapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const (
-)
-
 var (
 	token = os.Getenv("TOKEN")
-	pg = NewPGStorage()
+	pg    = NewPGStorage()
 )
 
 func main() {
+	go func() {
+		log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), nil))
+	}()
+
 	ot, err := tgapi.NewBotAPI(token)
 	if err != nil {
 		log.Panic(err)
