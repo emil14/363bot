@@ -4,16 +4,17 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	tgapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
-	token = "..."
 )
 
 var (
+	token = os.Getenv("TOKEN")
 	pg = NewPGStorage()
 )
 
