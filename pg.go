@@ -107,6 +107,11 @@ func NewPGStorage() postgresStorage {
 		os.Exit(1)
 	}
 
+	_, err = conn.Exec(ctx, `DROP TABLE users`)
+	if err != nil {
+		panic(err)
+	}
+
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS users (
 		id INT PRIMARY KEY,
