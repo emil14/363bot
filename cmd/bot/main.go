@@ -42,6 +42,7 @@ func main() {
 			if u.Message.Text == "/start" {
 				if err := pg.AddUser(userID, userName); err != nil {
 					ot.Send(tgapi.NewMessage(userID, "ты уже зареган, еблан"))
+					continue
 				}
 
 				msg := fmt.Sprintf(
