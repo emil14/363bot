@@ -103,7 +103,7 @@ func send(id int64, ot *tgapi.BotAPI) {
 	ot.Send(msg)
 
 	for {
-		ot.Send(msg)
 		time.Sleep(time.Hour * 24)
+		ot.Send(msg)
 	}
 }
