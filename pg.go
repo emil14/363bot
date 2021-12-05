@@ -99,9 +99,7 @@ func (m *postgresStorage) Users() ([]User, error) {
 }
 
 func NewPGStorage() postgresStorage {
-	addr := "postgres://postgres:1234@localhost:5432/postgres"
-
-	conn, err := pgx.Connect(context.Background(), addr)
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
