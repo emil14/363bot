@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
@@ -17,10 +16,6 @@ var (
 )
 
 func main() {
-	go func() {
-		log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), nil))
-	}()
-
 	ot, err := tgapi.NewBotAPI(token)
 	if err != nil {
 		log.Panic(err)
