@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"time"
@@ -25,7 +26,6 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	ot.Debug = true
 	log.Printf("Authorized on account %s", ot.Self.UserName)
 
 	defer pg.conn.Close(context.Background())
@@ -45,7 +45,16 @@ func main() {
 						panic(err)
 					}
 
+					msg := fmt.Sprintf(
+						"Салам алейкум, %s! Отныне я буду спрашивать, пыхал ли ты вчера и следить за твоей кармой",
+						u.Message.From.FirstName,
+					)
+
+					ot.Send(tgapi.NewMessage(userID, msg))
+
 					log.Printf("New user added %s", userName)
+
+					send(userID, ot)
 				}
 
 				if u.Message.Text == "/get_user" {
@@ -54,9 +63,12 @@ func main() {
 						panic(err)
 					}
 
-					msg := fmt.Sprintf(
-						"you are %s\nand your fucking days without weed %d",
-						user.name, user.daysWithoutWeed)
+					var msg string
+					if user.daysWithoutWeed > 0 {
+						msg = fmt.Sprintf("Ты не пыхал дней: %d", user.daysWithoutWeed)
+					} else {
+						msg = fmt.Sprintf("Ты пыхаешь дней: %v", math.Abs(float64(user.daysWithoutWeed)))
+					}
 
 					ot.Send(tgapi.NewMessage(userID, msg))
 				}
@@ -80,24 +92,21 @@ func main() {
 		}
 	}()
 
+}
+
+func send(id int64, ot *tgapi.BotAPI) {
+	msg := tgapi.NewMessage(id, "Йо, пыхал вчера?")
+	msg.ReplyMarkup = tgapi.NewInlineKeyboardMarkup(
+		tgapi.NewInlineKeyboardRow(
+			tgapi.NewInlineKeyboardButtonData("Да :)", "+"),
+			tgapi.NewInlineKeyboardButtonData("Нет !", "-"),
+		),
+	)
+
+	ot.Send(msg)
+
 	for {
-		users, err := pg.Users()
-		if err != nil {
-			panic(err)
-		}
-
-		for _, user := range users {
-			msg := tgapi.NewMessage(user.id, "пыхал вчера?")
-			msg.ReplyMarkup = tgapi.NewInlineKeyboardMarkup(
-				tgapi.NewInlineKeyboardRow(
-					tgapi.NewInlineKeyboardButtonData("Да :)", "+"),
-					tgapi.NewInlineKeyboardButtonData("Нет :)", "-"),
-				),
-			)
-
-			ot.Send(msg)
-		}
-
-		time.Sleep(time.Minute)
+		ot.Send(msg)
+		time.Sleep(time.Hour * 24)
 	}
 }
