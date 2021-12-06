@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"net/http"
 	"os"
 	"time"
 
@@ -18,10 +17,6 @@ var (
 )
 
 func main() {
-	go func() {
-		log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), nil))
-	}()
-
 	ot, err := tgapi.NewBotAPI(token)
 	if err != nil {
 		log.Panic(err)
@@ -33,6 +28,21 @@ func main() {
 	updCfg := tgapi.NewUpdate(0)
 	updCfg.Timeout = 60
 	updates := ot.GetUpdatesChan(updCfg)
+
+	go func() {
+		for {
+			<-wait()
+
+			users, err := pg.Users()
+			if err != nil {
+				panic(err)
+			}
+
+			for _, u := range users {
+				ot.Send(askAboutWeedMsg(u.id))
+			}
+		}
+	}()
 
 	for u := range updates {
 		if u.Message != nil {
@@ -53,8 +63,6 @@ func main() {
 				ot.Send(tgapi.NewMessage(userID, msg))
 
 				log.Printf("New user added %s", userName)
-
-				go send(userID, ot)
 			}
 
 			if u.Message.Text == "/get_user" {
@@ -92,7 +100,7 @@ func main() {
 	}
 }
 
-func send(id int64, ot *tgapi.BotAPI) {
+func askAboutWeedMsg(id int64) tgapi.MessageConfig {
 	msg := tgapi.NewMessage(id, "Йо, пыхал вчера?")
 	msg.ReplyMarkup = tgapi.NewInlineKeyboardMarkup(
 		tgapi.NewInlineKeyboardRow(
@@ -101,10 +109,18 @@ func send(id int64, ot *tgapi.BotAPI) {
 		),
 	)
 
-	ot.Send(msg)
+	return msg
+}
 
-	for {
-		time.Sleep(time.Hour * 24)
-		ot.Send(msg)
+func wait() <-chan time.Time {
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		panic(err)
 	}
+
+	now := time.Now().In(loc)
+	yyyy, mm, dd := now.Date()
+	nextMorning := time.Date(yyyy, mm, dd+1, 10, 0, 0, 0, now.Location())
+
+	return time.After(nextMorning.Sub(now))
 }

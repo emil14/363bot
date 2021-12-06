@@ -8,6 +8,46 @@ import (
 	pgx "github.com/jackc/pgx/v4"
 )
 
+var m = map[string][]int{
+	"3d":  {2},
+	"4d":  {3},       // 7
+	"7d":  {4},       // 14
+	"9d":  {5},       // 23
+	"10d": {6},       // 33
+	"14d": {7, 8, 9}, // 47 61 75
+	"15d": {10},      // 90
+}
+
+type karma struct {
+	days   uint8
+	factor uint8
+}
+
+var karmaPolice = []karma{
+	{3, 2},
+	{7, 3},
+	{14, 4},
+	{23, 5},
+	{33, 6},
+	{47, 7},
+	{61, 8},
+	{75, 9},
+	{90, 10},
+}
+
+func getFactor(days uint8) uint8 {
+	var f uint8
+
+	for _, k := range karmaPolice {
+		if days >= k.days {
+			f = k.factor
+		}
+		break
+	}
+
+	return f
+}
+
 type postgresStorage struct {
 	conn *pgx.Conn
 }
@@ -35,10 +75,12 @@ func (m *postgresStorage) UpdateUser(id int64, smokedYesteday bool) error {
 		return err
 	}
 
+	u.karma += int64(10 * getFactor(uint8(u.daysWithoutWeed)))
+
 	query := `
 	UPDATE users
-		SET days_without_weed = $1
-		WHERE id=$2;
+		SET days_without_weed = $1, karma = $2
+		WHERE id=$3;
 	`
 
 	if smokedYesteday {
@@ -55,7 +97,7 @@ func (m *postgresStorage) UpdateUser(id int64, smokedYesteday bool) error {
 		}
 	}
 
-	_, err = m.conn.Exec(context.TODO(), query, u.daysWithoutWeed, id)
+	_, err = m.conn.Exec(context.TODO(), query, u.daysWithoutWeed, u.karma, id)
 
 	return err
 }
