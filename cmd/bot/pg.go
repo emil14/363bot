@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 
 	pgx "github.com/jackc/pgx/v4"
@@ -35,11 +36,11 @@ var karmaPolice = []karma{
 	{90, 10},
 }
 
-func getFactor(days uint8) uint8 {
-	var f uint8
+func getFactor(days int64) uint8 {
+	var f uint8 = 1
 
 	for _, k := range karmaPolice {
-		if days >= k.days {
+		if int64(math.Abs(float64(days))) >= int64(k.days) {
 			f = k.factor
 		}
 		break
@@ -75,8 +76,6 @@ func (m *postgresStorage) UpdateUser(id int64, smokedYesteday bool) error {
 		return err
 	}
 
-	u.karma += int64(10 * getFactor(uint8(u.daysWithoutWeed)))
-
 	query := `
 	UPDATE users
 		SET days_without_weed = $1, karma = $2
@@ -86,14 +85,18 @@ func (m *postgresStorage) UpdateUser(id int64, smokedYesteday bool) error {
 	if smokedYesteday {
 		if u.daysWithoutWeed > 0 {
 			u.daysWithoutWeed = 0
+			u.karma -= int64(10 * getFactor(u.daysWithoutWeed))
 		} else {
 			u.daysWithoutWeed -= 1
+			u.karma -= int64(10 * getFactor(u.daysWithoutWeed))
 		}
 	} else {
 		if u.daysWithoutWeed < 0 {
 			u.daysWithoutWeed = 1
+			u.karma += int64(10 * getFactor(u.daysWithoutWeed))
 		} else {
 			u.daysWithoutWeed += 1
+			u.karma += int64(10 * getFactor(u.daysWithoutWeed))
 		}
 	}
 

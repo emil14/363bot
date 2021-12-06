@@ -73,9 +73,11 @@ func main() {
 
 				var msg string
 				if user.daysWithoutWeed > 0 {
-					msg = fmt.Sprintf("Ты не пыхал дней: %d", user.daysWithoutWeed)
+					msg = fmt.Sprintf("Ты не пыхал дней: %d\nТвоя карма :%d", user.daysWithoutWeed, user.karma)
 				} else {
-					msg = fmt.Sprintf("Ты пыхаешь дней: %v", math.Abs(float64(user.daysWithoutWeed)))
+					msg = fmt.Sprintf(
+						"Ты пыхаешь дней: %v\nТвоя карма: %d", math.Abs(float64(user.daysWithoutWeed)), user.karma,
+					)
 				}
 
 				ot.Send(tgapi.NewMessage(userID, msg))
