@@ -23,6 +23,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	log.Printf("Bot %s activated", tg.Self.UserName)
 
 	var ctx = context.Background()
 
