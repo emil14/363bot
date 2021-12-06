@@ -1,4 +1,4 @@
-module x
+module github.com/emil14/363bot
 
 go 1.16
 

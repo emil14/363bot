@@ -2,29 +2,17 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"math"
-	"os"
 
 	pgx "github.com/jackc/pgx/v4"
 )
 
-var m = map[string][]int{
-	"3d":  {2},
-	"4d":  {3},       // 7
-	"7d":  {4},       // 14
-	"9d":  {5},       // 23
-	"10d": {6},       // 33
-	"14d": {7, 8, 9}, // 47 61 75
-	"15d": {10},      // 90
-}
-
-type karma struct {
+type timeFactor struct {
 	days   uint8
 	factor uint8
 }
 
-var karmaPolice = []karma{
+var tf = [...]timeFactor{
 	{3, 2},
 	{7, 3},
 	{14, 4},
@@ -39,7 +27,7 @@ var karmaPolice = []karma{
 func getFactor(days int64) uint8 {
 	var f uint8 = 1
 
-	for _, k := range karmaPolice {
+	for _, k := range tf {
 		if int64(math.Abs(float64(days))) >= int64(k.days) {
 			f = k.factor
 		}
@@ -53,7 +41,7 @@ type postgresStorage struct {
 	conn *pgx.Conn
 }
 
-func (m *postgresStorage) AddUser(id int64, name string) error {
+func (pg *postgresStorage) AddUser(ctx context.Context, id int64, name string) error {
 	query := `
 	INSERT INTO users (
 		id,
@@ -63,15 +51,15 @@ func (m *postgresStorage) AddUser(id int64, name string) error {
 	)
 	VALUES ($1,$2,$3,$4);`
 
-	if _, err := m.conn.Exec(context.TODO(), query, id, name, 0, 0); err != nil {
+	if _, err := pg.conn.Exec(ctx, query, id, name, 0, 0); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (m *postgresStorage) UpdateUser(id int64, smokedYesteday bool) error {
-	u, err := m.User(id)
+func (pg *postgresStorage) UpdateUser(ctx context.Context, id int64, smokedYesteday bool) error {
+	u, err := pg.User(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -85,7 +73,7 @@ func (m *postgresStorage) UpdateUser(id int64, smokedYesteday bool) error {
 	if smokedYesteday {
 		if u.daysWithoutWeed > 0 {
 			u.daysWithoutWeed = 0
-			u.karma -= int64(10 * getFactor(u.daysWithoutWeed))
+			u.karma /= int64(getFactor(u.daysWithoutWeed))
 		} else {
 			u.daysWithoutWeed -= 1
 			u.karma -= int64(10 * getFactor(u.daysWithoutWeed))
@@ -100,18 +88,18 @@ func (m *postgresStorage) UpdateUser(id int64, smokedYesteday bool) error {
 		}
 	}
 
-	_, err = m.conn.Exec(context.TODO(), query, u.daysWithoutWeed, u.karma, id)
+	_, err = pg.conn.Exec(ctx, query, u.daysWithoutWeed, u.karma, id)
 
 	return err
 }
 
-func (m *postgresStorage) User(id int64) (User, error) {
+func (pg *postgresStorage) User(ctx context.Context, id int64) (User, error) {
 	query := `
 	SELECT id, name, days_without_weed, karma 
 		FROM users WHERE id=$1;`
 
 	var u User
-	row := m.conn.QueryRow(context.TODO(), query, id)
+	row := pg.conn.QueryRow(ctx, query, id)
 	if err := row.Scan(&u.id, &u.name, &u.daysWithoutWeed, &u.karma); err != nil {
 		return User{}, err
 	}
@@ -119,51 +107,54 @@ func (m *postgresStorage) User(id int64) (User, error) {
 	return u, nil
 }
 
-func (m *postgresStorage) Users() ([]User, error) {
-	query := `
-	SELECT id, name, days_without_weed, karma 
-		FROM users;`
-
-	rows, err := m.conn.Query(context.TODO(), query)
+func (pg *postgresStorage) Users(ctx context.Context) ([]User, error) {
+	rows, err := pg.conn.Query(ctx, `SELECT id, name, days_without_weed, karma FROM users;`)
 	if err != nil {
 		return nil, err
 	}
 
 	uu := []User{}
-
 	for rows.Next() {
 		var u User
 		if err := rows.Scan(&u.id, &u.name, &u.daysWithoutWeed, &u.karma); err != nil {
 			return nil, err
 		}
-
 		uu = append(uu, u)
 	}
 
 	return uu, nil
 }
 
-func NewPGStorage() postgresStorage {
+func (pg *postgresStorage) Close(ctx context.Context) error {
+	return pg.conn.Close(ctx)
+}
+
+func NewPostgres(pgConnStr string) (Storage, error) {
 	ctx := context.Background()
 
-	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
+	conn, err := pgx.Connect(ctx, pgConnStr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		return nil, err
 	}
 
 	_, err = conn.Exec(ctx, `
 	CREATE TABLE IF NOT EXISTS users (
 		id INT PRIMARY KEY,
-		name VARCHAR(255),
+		name VARCHAR(32),
 		days_without_weed INT,
 		karma INT
 	);`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return postgresStorage{
-		conn,
+	return &postgresStorage{conn}, nil
+}
+
+func MustNewPostgres(pgConnStr string) Storage {
+	pg, err := NewPostgres(pgConnStr)
+	if err != nil {
+		panic(err)
 	}
+	return pg
 }

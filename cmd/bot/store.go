@@ -1,5 +1,7 @@
 package main
 
+import "context"
+
 type User struct {
 	id              int64  `db:"id"`
 	name            string `db:"name"`
@@ -8,8 +10,10 @@ type User struct {
 }
 
 type Storage interface {
-	AddUser(id int64, name string) error
-	UpdateUser(id int64, usedWeed bool) error
-	User(id int64) (User, error)
-	Users() ([]User, error)
+	AddUser(ctx context.Context, id int64, name string) error
+	UpdateUser(ctx context.Context, id int64, usedWeed bool) error
+	User(ctx context.Context, id int64) (User, error)
+	Users(ctx context.Context) ([]User, error)
+
+	Close(ctx context.Context) error
 }
