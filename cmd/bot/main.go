@@ -99,26 +99,29 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				}
 			}
 
-			continue
+			_, err := tg.Send(tgapi.NewMessage(userID, "Много пиздишь"))
+			if err != nil {
+				return err
+			}
 		}
 
 		if u.CallbackQuery != nil {
 			id := u.CallbackQuery.From.ID
 			switch u.CallbackData() {
 			case "+":
+				if err := pg.UpdateUser(ctx, id, true); err != nil {
+					return err
+				}
 				_, err := tg.Send(tgapi.NewMessage(id, "fuck you"))
 				if err != nil {
 					return err
 				}
-				if err := pg.UpdateUser(ctx, id, true); err != nil {
+			case "-":
+				if err := pg.UpdateUser(ctx, id, false); err != nil {
 					return err
 				}
-			case "-":
 				_, err := tg.Send(tgapi.NewMessage(id, "good for you"))
 				if err != nil {
-					return err
-				}
-				if err := pg.UpdateUser(ctx, id, false); err != nil {
 					return err
 				}
 			}
