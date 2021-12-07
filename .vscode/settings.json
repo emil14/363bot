@@ -1,5 +1,16 @@
 {
     "cSpell.words": [
         "tgapi"
+    ],
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "name": "bot",
+            "connectString": "postgres://postgres:1234@localhost:5432/postgres"
+        }
     ]
 }

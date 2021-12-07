@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
@@ -105,7 +106,27 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				continue
 			}
 
-			_, err := tg.Send(tgapi.NewMessage(userID, "Много пиздишь"))
+			// s := u.Message.Sticker
+
+			log.Printf("%+v", u.Message)
+
+			f := tgapi.FilePath("../../assets/dukalis.jpg")
+
+			log.Println(f)
+
+			file, err := os.Open("../../assets/dukalis.jpg")
+			if err != nil {
+				panic(err)
+			}
+
+			reader := bufio.NewReader(file)
+
+			file_ := tgapi.FileReader{
+				Name:   "Дукалис",
+				Reader: reader,
+			}
+
+			_, err = tg.Send(tgapi.NewSticker(userID, file_))
 			if err != nil {
 				return err
 			}
@@ -176,9 +197,11 @@ func wait() <-chan time.Time {
 
 	now := time.Now().In(loc)
 	log.Println("NOW", now)
-	yyyy, mm, dd := now.Date()
-	nextMorning := time.Date(yyyy, mm, dd+1, 10, 0, 0, 0, now.Location())
-	log.Println("MORNING", nextMorning)
 
-	return time.After(nextMorning.Sub(now))
+	return time.After(time.Minute)
+	// yyyy, mm, dd := now.Date()
+	// nextMorning := time.Date(yyyy, mm, dd+1, 10, 0, 0, 0, now.Location())
+	// log.Println("MORNING", nextMorning)
+
+	// return time.After(nextMorning.Sub(now))
 }

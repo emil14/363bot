@@ -66,31 +66,32 @@ func (pg *postgresStorage) UpdateUser(ctx context.Context, id int64, smokedYeste
 		return err
 	}
 
+	f := int64(getFactor(u.daysWithoutWeed))
+
+	if smokedYesteday {
+		if u.daysWithoutWeed > 0 {
+			u.daysWithoutWeed = 0
+			u.karma /= f
+		} else {
+			u.daysWithoutWeed -= 1
+			u.karma -= f
+		}
+	} else {
+		if u.daysWithoutWeed < 0 {
+			u.daysWithoutWeed = 1
+		} else {
+			u.daysWithoutWeed += 1
+		}
+		u.karma += f
+	}
+
+	log.Println("!!!", u.daysWithoutWeed, u.karma, getFactor(u.daysWithoutWeed))
+
 	query := `
 	UPDATE users
 		SET days_without_weed = $1, karma = $2
 		WHERE id=$3;
 	`
-
-	if smokedYesteday {
-		if u.daysWithoutWeed > 0 {
-			u.daysWithoutWeed = 0
-			u.karma /= int64(getFactor(u.daysWithoutWeed))
-		} else {
-			u.daysWithoutWeed -= 1
-			u.karma -= int64(10 * getFactor(u.daysWithoutWeed))
-		}
-	} else {
-		if u.daysWithoutWeed < 0 {
-			u.daysWithoutWeed = 1
-			u.karma += int64(10 * getFactor(u.daysWithoutWeed))
-		} else {
-			u.daysWithoutWeed += 1
-			u.karma += int64(10 * getFactor(u.daysWithoutWeed))
-		}
-	}
-
-	log.Println("!!!", u.daysWithoutWeed, u.karma, getFactor(u.daysWithoutWeed))
 
 	_, err = pg.conn.Exec(ctx, query, u.daysWithoutWeed, u.karma, id)
 

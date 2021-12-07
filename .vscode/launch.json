@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/bot",
+            "env": {
+                "DATABASE_URL": "postgres://postgres:1234@localhost:5432/postgres",
+                "TOKEN": "5004217059:AAEooCPY-mtXWufS5qSpYr5TLp8qfoQT9Zw",
+            }
+        }
+    ]
+}
