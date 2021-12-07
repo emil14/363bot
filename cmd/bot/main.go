@@ -14,6 +14,8 @@ import (
 var pg = MustNewPostgres(os.Getenv("DATABASE_URL"))
 
 func main() {
+	log.Printf("Start 363Bot")
+
 	token := os.Getenv("TOKEN")
 	if token == "" {
 		panic("no token")
@@ -25,7 +27,7 @@ func main() {
 	}
 	log.Printf("Bot %s activated", tg.Self.UserName)
 
-	var ctx = context.Background()
+	ctx := context.Background()
 
 	defer func() {
 		if err := pg.Close(ctx); err != nil {
@@ -77,6 +79,8 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				}
 
 				log.Printf("New user: %s", userName)
+
+				continue
 			}
 
 			if msgText == "/get_user" {
@@ -97,6 +101,8 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				if err != nil {
 					return err
 				}
+
+				continue
 			}
 
 			_, err := tg.Send(tgapi.NewMessage(userID, "Много пиздишь"))
@@ -140,6 +146,8 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 			return err
 		}
 
+		log.Println(users)
+
 		for _, u := range users {
 			_, err := tg.Send(askAboutWeedMsg(u.id))
 			if err != nil {
@@ -167,8 +175,10 @@ func wait() <-chan time.Time {
 	}
 
 	now := time.Now().In(loc)
+	log.Println("NOW", now)
 	yyyy, mm, dd := now.Date()
 	nextMorning := time.Date(yyyy, mm, dd+1, 10, 0, 0, 0, now.Location())
+	log.Println("MORNING", nextMorning)
 
 	return time.After(nextMorning.Sub(now))
 }

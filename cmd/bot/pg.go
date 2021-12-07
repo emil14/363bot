@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"math"
 
 	pgx "github.com/jackc/pgx/v4"
@@ -25,16 +26,17 @@ var tf = [...]timeFactor{
 }
 
 func getFactor(days int64) uint8 {
-	var f uint8 = 1
+	var factor uint8 = 1
 
-	for _, k := range tf {
-		if int64(math.Abs(float64(days))) >= int64(k.days) {
-			f = k.factor
+	for _, f := range tf {
+		if int64(math.Abs(float64(days))) < int64(f.days) {
+			break
 		}
-		break
+
+		factor = f.factor
 	}
 
-	return f
+	return factor
 }
 
 type postgresStorage struct {
@@ -87,6 +89,8 @@ func (pg *postgresStorage) UpdateUser(ctx context.Context, id int64, smokedYeste
 			u.karma += int64(10 * getFactor(u.daysWithoutWeed))
 		}
 	}
+
+	log.Println("!!!", u.daysWithoutWeed, u.karma, getFactor(u.daysWithoutWeed))
 
 	_, err = pg.conn.Exec(ctx, query, u.daysWithoutWeed, u.karma, id)
 
