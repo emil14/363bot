@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"log"
@@ -106,28 +105,27 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				continue
 			}
 
-			log.Printf("%+v", u.Message)
-
-			f := tgapi.FilePath("../../assets/dukalis.jpg")
-
-			log.Println(f)
-
-			file, err := os.Open("../../assets/dukalis.jpg")
-			if err != nil {
-				panic(err)
-			}
-			
-			reader := bufio.NewReader(file)
-
-			file_ := tgapi.FileReader{
-				Name:   "Дукалис",
-				Reader: reader,
-			}
-
-			_, err = tg.Send(tgapi.NewSticker(userID, file_))
+			_, err := tg.Send(tgapi.NewMessage(userID, "Много пиздиш"))
 			if err != nil {
 				return err
 			}
+
+			// file, err := os.Open("../../assets/dukalis.jpg")
+			// if err != nil {
+			// 	panic(err)
+			// }
+
+			// reader := bufio.NewReader(file)
+
+			// file_ := tgapi.FileReader{
+			// 	Name:   "Дукалис",
+			// 	Reader: reader,
+			// }
+
+			// _, err = tg.Send(tgapi.NewSticker(userID, file_))
+			// if err != nil {
+			// 	return err
+			// }
 		}
 
 		if u.CallbackQuery != nil {
