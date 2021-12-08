@@ -106,8 +106,6 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				continue
 			}
 
-			// s := u.Message.Sticker
-
 			log.Printf("%+v", u.Message)
 
 			f := tgapi.FilePath("../../assets/dukalis.jpg")
@@ -118,7 +116,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			if err != nil {
 				panic(err)
 			}
-
+			
 			reader := bufio.NewReader(file)
 
 			file_ := tgapi.FileReader{
@@ -198,10 +196,9 @@ func wait() <-chan time.Time {
 	now := time.Now().In(loc)
 	log.Println("NOW", now)
 
-	return time.After(time.Minute)
-	// yyyy, mm, dd := now.Date()
-	// nextMorning := time.Date(yyyy, mm, dd+1, 10, 0, 0, 0, now.Location())
-	// log.Println("MORNING", nextMorning)
+	yyyy, mm, dd := now.Date()
+	nextMorning := time.Date(yyyy, mm, dd+1, 11, 0, 0, 0, now.Location())
+	log.Println("MORNING", nextMorning)
 
-	// return time.After(nextMorning.Sub(now))
+	return time.After(nextMorning.Sub(now))
 }
