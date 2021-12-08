@@ -11,7 +11,7 @@ import (
 	tgapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var pg = MustNewPostgres(os.Getenv("DATABASE_URL"))
+var store = MustNewPostgres(os.Getenv("DATABASE_URL"))
 
 func main() {
 	log.Printf("Start 363Bot")
@@ -30,7 +30,7 @@ func main() {
 	ctx := context.Background()
 
 	defer func() {
-		if err := pg.Close(ctx); err != nil {
+		if err := store.Close(ctx); err != nil {
 			panic(err)
 		}
 	}()
@@ -60,7 +60,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			)
 
 			if msgText == "/start" {
-				if err := pg.AddUser(ctx, userID, userName); err != nil {
+				if err := store.AddUser(ctx, userID, userName); err != nil {
 					_, err := tg.Send(tgapi.NewMessage(userID, "Ты уже зареган, еблан!"))
 					if err != nil {
 						return err
@@ -84,7 +84,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			}
 
 			if msgText == "/get_user" {
-				user, err := pg.User(ctx, userID)
+				user, err := store.User(ctx, userID)
 				if err != nil {
 					return err
 				}
@@ -132,7 +132,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			id := u.CallbackQuery.From.ID
 			switch u.CallbackData() {
 			case "+":
-				if err := pg.UpdateUser(ctx, id, true); err != nil {
+				if err := store.UpdateUser(ctx, id, true); err != nil {
 					return err
 				}
 				_, err := tg.Send(tgapi.NewMessage(id, "fuck you"))
@@ -140,7 +140,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 			case "-":
-				if err := pg.UpdateUser(ctx, id, false); err != nil {
+				if err := store.UpdateUser(ctx, id, false); err != nil {
 					return err
 				}
 				_, err := tg.Send(tgapi.NewMessage(id, "good for you"))
@@ -158,9 +158,9 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 	for {
 		<-wait()
 
-		users, err := pg.Users(ctx)
+		users, err := store.Users(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("get users: %w", err)
 		}
 
 		log.Println(users)
@@ -168,7 +168,7 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 		for _, u := range users {
 			_, err := tg.Send(askAboutWeedMsg(u.id))
 			if err != nil {
-				return err
+				log.Printf("send tg msg to user %d: %v", u.id, err)
 			}
 		}
 	}
