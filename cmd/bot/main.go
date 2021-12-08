@@ -195,7 +195,7 @@ func wait() <-chan time.Time {
 	log.Println("NOW", now)
 
 	yyyy, mm, dd := now.Date()
-	nextMorning := time.Date(yyyy, mm, dd+1, 11, 0, 0, 0, now.Location())
+	nextMorning := time.Date(yyyy, mm, dd, 11, 0, 0, 0, now.Location())
 	log.Println("MORNING", nextMorning)
 
 	return time.After(nextMorning.Sub(now))
