@@ -19,7 +19,7 @@ var ducalis []byte
 //go:embed assets/coop.jpg
 var coop []byte
 
-//go:embed assets/coop.jpg
+//go:embed assets/vin.jpg
 var vin []byte
 
 var store = MustNewPostgres(os.Getenv("DATABASE_URL"))
