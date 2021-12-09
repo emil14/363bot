@@ -74,7 +74,7 @@ func (pg *postgresStorage) UpdateUser(ctx context.Context, id int64, smokedYeste
 			u.karma /= f
 		} else {
 			u.daysWithoutWeed -= 1
-			u.karma -= f
+			u.karma -= 10 * f
 		}
 	} else {
 		if u.daysWithoutWeed < 0 {
@@ -82,7 +82,7 @@ func (pg *postgresStorage) UpdateUser(ctx context.Context, id int64, smokedYeste
 		} else {
 			u.daysWithoutWeed += 1
 		}
-		u.karma += f
+		u.karma += 10 * f
 	}
 
 	log.Println("!!!", u.daysWithoutWeed, u.karma, getFactor(u.daysWithoutWeed))
