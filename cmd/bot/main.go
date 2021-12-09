@@ -39,11 +39,11 @@ func main() {
 	updCfg.Timeout = 60
 	updates := tg.GetUpdatesChan(updCfg)
 
-	// go func() {
-	// 	if err := startAskJob(ctx, tg); err != nil {
-	// 		panic(err)
-	// 	}
-	// }()
+	go func() {
+		if err := startAskJob(ctx, tg); err != nil {
+			panic(err)
+		}
+	}()
 
 	if err := handleUpdates(updates, ctx, tg); err != nil {
 		panic(err)
@@ -158,17 +158,19 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 	for {
 		<-wait()
 
-		users, err := store.Users(ctx)
-		if err != nil {
-			return fmt.Errorf("get users: %w", err)
-		}
+		// users, err := store.Users(ctx)
+		// if err != nil {
+		// 	return fmt.Errorf("get users: %w", err)
+		// }
 
-		log.Println(users)
+		// log.Println(users)
+
+		users := []int64{282857241, 90217964}
 
 		for _, u := range users {
-			_, err := tg.Send(askAboutWeedMsg(u.id))
+			_, err := tg.Send(askAboutWeedMsg(u))
 			if err != nil {
-				log.Printf("send tg msg to user %d: %v", u.id, err)
+				log.Printf("send tg msg to user %d: %v", u, err)
 			}
 		}
 	}
