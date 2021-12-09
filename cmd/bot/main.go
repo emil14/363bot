@@ -167,12 +167,11 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 
 		users := []int64{282857241, 90217964}
 
-		for range users {
-			// log.Printf("Send %d\n", u)
-			// _, err := tg.Send(askAboutWeedMsg(u))
-			// if err != nil {
-			// 	log.Printf("send tg msg to user %d: %v", u, err)
-			// }
+		for _, u := range users {
+			_, err := tg.Send(askAboutWeedMsg(u))
+			if err != nil {
+				log.Printf("send tg msg to user %d: %v", u, err)
+			}
 		}
 	}
 }
@@ -198,9 +197,10 @@ func wait() <-chan time.Time {
 	// log.Println("NOW", now)
 
 	yyyy, mm, dd := now.Date()
-	nextMorning := time.Date(yyyy, mm, dd, 11, 0, 0, 0, now.Location())
-	// log.Println("MORNING", nextMorning)
-	log.Println("NEXT_NORNING_SUB", nextMorning.Sub(now))
+	// nextMorning := time.Date(yyyy, mm, dd+1, 11, 0, 0, 0, now.Location()) // <== work
+	nextMorning := time.Date(yyyy, mm, dd, 21, 0, 0, 0, now.Location())
+	log.Println("MORNING", nextMorning)
+	// log.Println("NEXT_NORNING_SUB", nextMorning.Sub(now))
 
 	return time.After(nextMorning.Sub(now))
 }
