@@ -158,19 +158,17 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 	for {
 		<-wait()
 
-		// users, err := store.Users(ctx)
-		// if err != nil {
-		// 	return fmt.Errorf("get users: %w", err)
-		// }
+		users, err := store.Users(ctx)
+		if err != nil {
+			return fmt.Errorf("get users: %w", err)
+		}
 
-		// log.Println(users)
-
-		users := []int64{282857241, 90217964}
+		log.Println(users)
 
 		for _, u := range users {
-			_, err := tg.Send(askAboutWeedMsg(u))
+			_, err := tg.Send(askAboutWeedMsg(u.id))
 			if err != nil {
-				log.Printf("send tg msg to user %d: %v", u, err)
+				log.Printf("send tg msg to user %d: %v", u.id, err)
 			}
 		}
 	}
@@ -194,13 +192,9 @@ func wait() <-chan time.Time {
 	}
 
 	now := time.Now().In(loc)
-	// log.Println("NOW", now)
 
 	yyyy, mm, dd := now.Date()
-	// nextMorning := time.Date(yyyy, mm, dd+1, 11, 0, 0, 0, now.Location()) // <== work
-	nextMorning := time.Date(yyyy, mm, dd, 21, 0, 0, 0, now.Location())
-	log.Println("MORNING", nextMorning)
-	// log.Println("NEXT_NORNING_SUB", nextMorning.Sub(now))
+	nextMorning := time.Date(yyyy, mm, dd+1, 11, 0, 0, 0, now.Location()) // <== work
 
 	return time.After(nextMorning.Sub(now))
 }
