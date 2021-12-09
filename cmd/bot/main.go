@@ -132,6 +132,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 
 		if u.CallbackQuery != nil {
 			id := u.CallbackQuery.From.ID
+
 			switch u.CallbackData() {
 			case "+":
 				if err := store.UpdateUser(ctx, id, true); err != nil {
@@ -141,6 +142,25 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				if err != nil {
 					return err
 				}
+
+				user, err := store.User(ctx, id)
+				if err != nil {
+					return err
+				}
+
+				msg := fmt.Sprintf("Ты не пыхал дней: %d\nТвоя карма :%d", user.daysWithoutWeed, user.karma)
+				if user.daysWithoutWeed < 0 {
+					msg = fmt.Sprintf(
+						"Ты пыхаешь дней: %v\nТвоя карма: %d",
+						math.Abs(float64(user.daysWithoutWeed)), user.karma,
+					)
+				}
+
+				_, err = tg.Send(tgapi.NewMessage(id, msg))
+				if err != nil {
+					return err
+				}
+
 			case "-":
 				if err := store.UpdateUser(ctx, id, false); err != nil {
 					return err
@@ -157,6 +177,24 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 				_, err = tg.Send(tgapi.NewMessage(id, "good for you"))
+				if err != nil {
+					return err
+				}
+
+				user, err := store.User(ctx, id)
+				if err != nil {
+					return err
+				}
+
+				msg := fmt.Sprintf("Ты не пыхал дней: %d\nТвоя карма :%d", user.daysWithoutWeed, user.karma)
+				if user.daysWithoutWeed < 0 {
+					msg = fmt.Sprintf(
+						"Ты пыхаешь дней: %v\nТвоя карма: %d",
+						math.Abs(float64(user.daysWithoutWeed)), user.karma,
+					)
+				}
+
+				_, err = tg.Send(tgapi.NewMessage(id, msg))
 				if err != nil {
 					return err
 				}
