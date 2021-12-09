@@ -16,6 +16,9 @@ import (
 //go:embed assets/dukalis.jpg
 var ducalis []byte
 
+//go:embed assets/coop.jpg
+var coop []byte
+
 var store = MustNewPostgres(os.Getenv("DATABASE_URL"))
 
 func main() {
@@ -119,7 +122,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 
 			_, err = tg.Send(tgapi.NewSticker(
 				userID, tgapi.FileReader{
-					Name:   "Дукалис",
+					Name:   "Ducalis",
 					Reader: reader,
 				}))
 			if err != nil {
@@ -142,7 +145,18 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				if err := store.UpdateUser(ctx, id, false); err != nil {
 					return err
 				}
-				_, err := tg.Send(tgapi.NewMessage(id, "good for you"))
+
+				reader := bytes.NewReader(ducalis)
+
+				_, err := tg.Send(tgapi.NewSticker(
+					id, tgapi.FileReader{
+						Name:   "Cooper",
+						Reader: reader,
+					}))
+				if err != nil {
+					return err
+				}
+				_, err = tg.Send(tgapi.NewMessage(id, "good for you"))
 				if err != nil {
 					return err
 				}
