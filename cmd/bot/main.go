@@ -168,10 +168,11 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 		users := []int64{282857241, 90217964}
 
 		for _, u := range users {
-			_, err := tg.Send(askAboutWeedMsg(u))
-			if err != nil {
-				log.Printf("send tg msg to user %d: %v", u, err)
-			}
+			log.Printf("Send %d\n", u)
+			// _, err := tg.Send(askAboutWeedMsg(u))
+			// if err != nil {
+			// 	log.Printf("send tg msg to user %d: %v", u, err)
+			// }
 		}
 	}
 }
