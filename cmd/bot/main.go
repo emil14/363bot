@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	_ "embed"
 	"fmt"
 	"log"
 	"math"
@@ -110,22 +112,19 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				return err
 			}
 
-			// file, err := os.Open("../../assets/dukalis.jpg")
-			// if err != nil {
-			// 	panic(err)
-			// }
+			//go:embed assets/dukalis.jpg
+			var ducalis []byte
 
-			// reader := bufio.NewReader(file)
+			reader := bytes.NewReader(ducalis)
 
-			// file_ := tgapi.FileReader{
-			// 	Name:   "Дукалис",
-			// 	Reader: reader,
-			// }
-
-			// _, err = tg.Send(tgapi.NewSticker(userID, file_))
-			// if err != nil {
-			// 	return err
-			// }
+			_, err = tg.Send(tgapi.NewSticker(
+				userID, tgapi.FileReader{
+					Name:   "Дукалис",
+					Reader: reader,
+				}))
+			if err != nil {
+				return err
+			}
 		}
 
 		if u.CallbackQuery != nil {
