@@ -13,6 +13,9 @@ import (
 	tgapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+//go:embed assets/dukalis.jpg
+var ducalis []byte
+
 var store = MustNewPostgres(os.Getenv("DATABASE_URL"))
 
 func main() {
@@ -111,9 +114,6 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			if err != nil {
 				return err
 			}
-
-			//go:embed assets/dukalis.jpg
-			var ducalis []byte
 
 			reader := bytes.NewReader(ducalis)
 
