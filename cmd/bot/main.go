@@ -117,17 +117,6 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			if err != nil {
 				return err
 			}
-
-			reader := bytes.NewReader(ducalis)
-
-			_, err = tg.Send(tgapi.NewSticker(
-				userID, tgapi.FileReader{
-					Name:   "Ducalis",
-					Reader: reader,
-				}))
-			if err != nil {
-				return err
-			}
 		}
 
 		if u.CallbackQuery != nil {
@@ -139,6 +128,17 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 				_, err := tg.Send(tgapi.NewMessage(id, "fuck you"))
+				if err != nil {
+					return err
+				}
+
+				reader := bytes.NewReader(ducalis)
+
+				_, err = tg.Send(tgapi.NewSticker(
+					id, tgapi.FileReader{
+						Name:   "Ducalis",
+						Reader: reader,
+					}))
 				if err != nil {
 					return err
 				}
