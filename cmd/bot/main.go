@@ -19,6 +19,9 @@ var ducalis []byte
 //go:embed assets/coop.jpg
 var coop []byte
 
+//go:embed assets/coop.jpg
+var vin []byte
+
 var store = MustNewPostgres(os.Getenv("DATABASE_URL"))
 
 func main() {
@@ -117,17 +120,28 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			if err != nil {
 				return err
 			}
+
+			reader := bytes.NewReader(vin)
+
+			_, err = tg.Send(tgapi.NewSticker(
+				userID, tgapi.FileReader{
+					Name:   "Vin",
+					Reader: reader,
+				}))
+			if err != nil {
+				return err
+			}
 		}
 
 		if u.CallbackQuery != nil {
-			id := u.CallbackQuery.From.ID
+			userID := u.CallbackQuery.From.ID
 
 			switch u.CallbackData() {
 			case "+":
-				if err := store.UpdateUser(ctx, id, true); err != nil {
+				if err := store.UpdateUser(ctx, userID, true); err != nil {
 					return err
 				}
-				_, err := tg.Send(tgapi.NewMessage(id, "fuck you"))
+				_, err := tg.Send(tgapi.NewMessage(userID, "fuck you"))
 				if err != nil {
 					return err
 				}
@@ -135,7 +149,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				reader := bytes.NewReader(ducalis)
 
 				_, err = tg.Send(tgapi.NewSticker(
-					id, tgapi.FileReader{
+					userID, tgapi.FileReader{
 						Name:   "Ducalis",
 						Reader: reader,
 					}))
@@ -143,7 +157,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 
-				user, err := store.User(ctx, id)
+				user, err := store.User(ctx, userID)
 				if err != nil {
 					return err
 				}
@@ -156,32 +170,32 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					)
 				}
 
-				_, err = tg.Send(tgapi.NewMessage(id, msg))
+				_, err = tg.Send(tgapi.NewMessage(userID, msg))
 				if err != nil {
 					return err
 				}
 
 			case "-":
-				if err := store.UpdateUser(ctx, id, false); err != nil {
+				if err := store.UpdateUser(ctx, userID, false); err != nil {
 					return err
 				}
 
 				reader := bytes.NewReader(coop)
 
 				_, err := tg.Send(tgapi.NewSticker(
-					id, tgapi.FileReader{
+					userID, tgapi.FileReader{
 						Name:   "Cooper",
 						Reader: reader,
 					}))
 				if err != nil {
 					return err
 				}
-				_, err = tg.Send(tgapi.NewMessage(id, "good for you"))
+				_, err = tg.Send(tgapi.NewMessage(userID, "good for you"))
 				if err != nil {
 					return err
 				}
 
-				user, err := store.User(ctx, id)
+				user, err := store.User(ctx, userID)
 				if err != nil {
 					return err
 				}
@@ -194,7 +208,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					)
 				}
 
-				_, err = tg.Send(tgapi.NewMessage(id, msg))
+				_, err = tg.Send(tgapi.NewMessage(userID, msg))
 				if err != nil {
 					return err
 				}
