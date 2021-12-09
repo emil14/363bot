@@ -146,7 +146,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 
-				reader := bytes.NewReader(ducalis)
+				reader := bytes.NewReader(coop)
 
 				_, err := tg.Send(tgapi.NewSticker(
 					id, tgapi.FileReader{
