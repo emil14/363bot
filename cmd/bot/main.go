@@ -50,7 +50,7 @@ func main() {
 	updates := tg.GetUpdatesChan(updCfg)
 
 	go func() {
-		if err := sendDairyMsg(); err != nil {
+		if err := sendDairyMsg(tg); err != nil {
 			panic(err)
 		}
 	}()
@@ -66,7 +66,7 @@ func main() {
 	}
 }
 
-func sendDairyMsg() error {
+func sendDairyMsg(tg *tgapi.BotAPI) error {
 	users, err := store.Users(context.Background())
 	if err != nil {
 		return fmt.Errorf("get users: %w", err)
@@ -95,6 +95,11 @@ func sendDairyMsg() error {
 				tgapi.NewInlineKeyboardButtonData("Нет", "--"),
 			),
 		)
+
+		_, err := tg.Send(msg)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return nil
