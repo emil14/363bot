@@ -49,9 +49,11 @@ func main() {
 	updCfg.Timeout = 60
 	updates := tg.GetUpdatesChan(updCfg)
 
-	if err := sendDairyMsg(); err != nil {
-		panic(err)
-	}
+	go func() {
+		if err := sendDairyMsg(); err != nil {
+			panic(err)
+		}
+	}()
 
 	go func() {
 		if err := startAskJob(ctx, tg); err != nil {
@@ -71,6 +73,8 @@ func sendDairyMsg() error {
 	}
 
 	for _, u := range users {
+		log.Printf("send dairy %s", u.name)
+
 		m := `Э-йоу, братишка, движению от всей души! 
 		
 		Хочешь я буду крепить каждый вечер, скажем, в 22:00 по МСК, оставить маленькую запись об том, каков был день сегоднящний?
