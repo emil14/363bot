@@ -88,17 +88,19 @@ func sendDairyMsg(tg *tgapi.BotAPI) error {
 		
 		Короче`
 
-		msg := tgapi.NewMessage(u.id, m)
-		msg.ReplyMarkup = tgapi.NewInlineKeyboardMarkup(
-			tgapi.NewInlineKeyboardRow(
-				tgapi.NewInlineKeyboardButtonData("От души движению! Крепить", "++"),
-				tgapi.NewInlineKeyboardButtonData("Нет", "--"),
-			),
-		)
+		if u.id != 1482619811 {
+			msg := tgapi.NewMessage(u.id, m)
+			msg.ReplyMarkup = tgapi.NewInlineKeyboardMarkup(
+				tgapi.NewInlineKeyboardRow(
+					tgapi.NewInlineKeyboardButtonData("От души движению! Крепить", "++"),
+					tgapi.NewInlineKeyboardButtonData("Нет", "--"),
+				),
+			)
 
-		_, err := tg.Send(msg)
-		if err != nil {
-			panic(err)
+			_, err := tg.Send(msg)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 
