@@ -36,7 +36,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("Bot %s activated", tg.Self.UserName)
 
 	ctx := context.Background()
 
@@ -50,6 +49,10 @@ func main() {
 	updCfg.Timeout = 60
 	updates := tg.GetUpdatesChan(updCfg)
 
+	if err := sendDairyMsg(); err != nil {
+		panic(err)
+	}
+
 	go func() {
 		if err := startAskJob(ctx, tg); err != nil {
 			panic(err)
@@ -59,6 +62,38 @@ func main() {
 	if err := handleUpdates(updates, ctx, tg); err != nil {
 		panic(err)
 	}
+}
+
+func sendDairyMsg() error {
+	users, err := store.Users(context.Background())
+	if err != nil {
+		return fmt.Errorf("get users: %w", err)
+	}
+
+	for _, u := range users {
+		m := `Э-йоу, братишка, движению от всей души! 
+		
+		Хочешь я буду крепить каждый вечер, скажем, в 22:00 по МСК, оставить маленькую запись об том, каков был день сегоднящний?
+
+		Сейчас это будет просто в формате напоминалки, можешь писать сообщение боту, можешь в свой канальчки, можно назвать его, скажем, "Dairy
+		Потом мы улучшим это. 
+		
+		Сообщение должно быть совсем короткое (пока опционально), мы это еше обдумаем, но почему-то мне кажется хорошей идей сделать его коротким.
+		Пусть сообщения будут просто "Хороший день" или "Вот и день прошел ну и нахуй он пошел", конечно, они могут более развернутыми.
+		Но не надо чтобы оно могло быть большое, тебя это может обламывать, поэтому лучше каждый день, но по чуть-чуть, чем вооще ничего
+		
+		Короче`
+
+		msg := tgapi.NewMessage(u.id, m)
+		msg.ReplyMarkup = tgapi.NewInlineKeyboardMarkup(
+			tgapi.NewInlineKeyboardRow(
+				tgapi.NewInlineKeyboardButtonData("От души движению! Крепить", "++"),
+				tgapi.NewInlineKeyboardButtonData("Нет", "--"),
+			),
+		)
+	}
+
+	return nil
 }
 
 func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.BotAPI) error {
@@ -137,6 +172,14 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			userID := u.CallbackQuery.From.ID
 
 			switch u.CallbackData() {
+			case "--":
+				_, err := tg.Send(tgapi.NewMessage(userID, "Ты долбоеб. Я никак это не обработаю"))
+				if err != nil {
+					panic(err)
+				}
+			case "++":
+				go starDairyJob(ctx, tg, userID)
+			// Пыхал
 			case "+":
 				if err := store.UpdateUser(ctx, userID, true); err != nil {
 					return err
@@ -174,7 +217,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				if err != nil {
 					return err
 				}
-
+			// Не пыхал
 			case "-":
 				if err := store.UpdateUser(ctx, userID, false); err != nil {
 					return err
@@ -219,6 +262,37 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 	return nil
 }
 
+func starDairyJob(ctx context.Context, tg *tgapi.BotAPI, id int64) {
+	_, err := tg.Send(tgapi.NewMessage(id, "Все правильно. Что же каков был день сегоднящний?"))
+	if err != nil {
+		panic(err)
+	}
+
+	for {
+		<-waitDairy()
+
+		_, err := tg.Send(tgapi.NewMessage(id, "Каков был день сегоднящний?"))
+		if err != nil {
+			panic(err)
+		}
+
+	}
+}
+
+func waitDairy() <-chan time.Time {
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		panic(err)
+	}
+
+	now := time.Now().In(loc)
+
+	yyyy, mm, dd := now.Date()
+	nextMorning := time.Date(yyyy, mm, dd+1, 22, 0, 0, 0, now.Location()) // <== work
+
+	return time.After(nextMorning.Sub(now))
+}
+
 func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 	for {
 		<-wait()
@@ -227,8 +301,6 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 		if err != nil {
 			return fmt.Errorf("get users: %w", err)
 		}
-
-		log.Println(users)
 
 		for _, u := range users {
 			_, err := tg.Send(askAboutWeedMsg(u.id))
