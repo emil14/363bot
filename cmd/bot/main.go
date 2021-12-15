@@ -13,15 +13,6 @@ import (
 	tgapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-//go:embed assets/dukalis.jpg
-var ducalis []byte
-
-//go:embed assets/coop.jpg
-var coop []byte
-
-//go:embed assets/vin.jpg
-var vin []byte
-
 var store = MustNewPostgres(os.Getenv("DATABASE_URL"))
 
 func main() {
@@ -76,32 +67,21 @@ func sendDairyMsg(tg *tgapi.BotAPI) error {
 		log.Printf("send dairy %s", u.name)
 
 		m := `Э-йоу, братишка, движению от всей души! 
-		
-		Хочешь я буду крепить каждый вечер, скажем, в 22:00 по МСК, оставить маленькую запись об том, каков был день сегоднящний?
+		По поводу Dairy`
 
-		Сейчас это будет просто в формате напоминалки, можешь писать сообщение боту, можешь в свой канальчки, можно назвать его, скажем, "Dairy
-		Потом мы улучшим это. 
-		
-		Сообщение должно быть совсем короткое (пока опционально), мы это еше обдумаем, но почему-то мне кажется хорошей идей сделать его коротким.
-		Пусть сообщения будут просто "Хороший день" или "Вот и день прошел ну и нахуй он пошел", конечно, они могут более развернутыми.
-		Но не надо чтобы оно могло быть большое, тебя это может обламывать, поэтому лучше каждый день, но по чуть-чуть, чем вооще ничего
-		
-		Короче`
+		msg := tgapi.NewMessage(u.id, m)
+		msg.ReplyMarkup = tgapi.NewInlineKeyboardMarkup(
+			tgapi.NewInlineKeyboardRow(
+				tgapi.NewInlineKeyboardButtonData("Да", "++"),
+				tgapi.NewInlineKeyboardButtonData("Нет", "--"),
+			),
+		)
 
-		if u.id != 1482619811 {
-			msg := tgapi.NewMessage(u.id, m)
-			msg.ReplyMarkup = tgapi.NewInlineKeyboardMarkup(
-				tgapi.NewInlineKeyboardRow(
-					tgapi.NewInlineKeyboardButtonData("От души движению! Крепить", "++"),
-					tgapi.NewInlineKeyboardButtonData("Нет", "--"),
-				),
-			)
-
-			_, err := tg.Send(msg)
-			if err != nil {
-				panic(err)
-			}
+		_, err := tg.Send(msg)
+		if err != nil {
+			panic(err)
 		}
+
 	}
 
 	return nil
@@ -162,18 +142,12 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				continue
 			}
 
-			_, err := tg.Send(tgapi.NewMessage(userID, "Много пиздиш"))
+			_, err := tg.Send(tgapi.NewMessage(userID, "Много пиздишь"))
 			if err != nil {
 				return err
 			}
 
-			reader := bytes.NewReader(vin)
-
-			_, err = tg.Send(tgapi.NewSticker(
-				userID, tgapi.FileReader{
-					Name:   "Vin",
-					Reader: reader,
-				}))
+			_, err = tg.Send(newVin(userID))
 			if err != nil {
 				return err
 			}
@@ -195,18 +169,13 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				if err := store.UpdateUser(ctx, userID, true); err != nil {
 					return err
 				}
+
 				_, err := tg.Send(tgapi.NewMessage(userID, "fuck you"))
 				if err != nil {
 					return err
 				}
 
-				reader := bytes.NewReader(ducalis)
-
-				_, err = tg.Send(tgapi.NewSticker(
-					userID, tgapi.FileReader{
-						Name:   "Ducalis",
-						Reader: reader,
-					}))
+				_, err = tg.Send(newDucalis(userID))
 				if err != nil {
 					return err
 				}
@@ -234,13 +203,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 
-				reader := bytes.NewReader(coop)
-
-				_, err := tg.Send(tgapi.NewSticker(
-					userID, tgapi.FileReader{
-						Name:   "Cooper",
-						Reader: reader,
-					}))
+				_, err := tg.Send(newCoop(userID))
 				if err != nil {
 					return err
 				}
@@ -274,7 +237,9 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 }
 
 func starDairyJob(ctx context.Context, tg *tgapi.BotAPI, id int64) {
-	_, err := tg.Send(tgapi.NewMessage(id, "Все правильно. Что же каков был день сегоднящний?"))
+	log.Printf("start dairy job for %d", id)
+
+	_, err := tg.Send(tgapi.NewMessage(id, "Все правильно. Что же каков был день сегодняшний?"))
 	if err != nil {
 		panic(err)
 	}
@@ -282,11 +247,10 @@ func starDairyJob(ctx context.Context, tg *tgapi.BotAPI, id int64) {
 	for {
 		<-waitDairy()
 
-		_, err := tg.Send(tgapi.NewMessage(id, "Каков был день сегоднящний?"))
+		_, err := tg.Send(tgapi.NewMessage(id, "Каков был день сегодняшний?"))
 		if err != nil {
 			panic(err)
 		}
-
 	}
 }
 
@@ -345,4 +309,55 @@ func wait() <-chan time.Time {
 	nextMorning := time.Date(yyyy, mm, dd+1, 11, 0, 0, 0, now.Location()) // <== work
 
 	return time.After(nextMorning.Sub(now))
+}
+
+/*
+	=========
+	STICKERS
+	=========
+*/
+
+// Ducalis
+var (
+	//go:embed assets/ducalis.jpg
+	ducalis []byte
+
+	ducalisReader = tgapi.FileReader{
+		Name:   "Ducalis",
+		Reader: bytes.NewReader(ducalis),
+	}
+)
+
+func newDucalis(id int64) tgapi.StickerConfig {
+	return tgapi.NewSticker(id, ducalisReader)
+}
+
+// Cooper
+var (
+	//go:embed assets/coop.jpg
+	coop []byte
+
+	coopReader = tgapi.FileReader{
+		Name:   "Cooper",
+		Reader: bytes.NewReader(coop),
+	}
+)
+
+func newCoop(id int64) tgapi.StickerConfig {
+	return tgapi.NewSticker(id, coopReader)
+}
+
+// Vin
+var (
+	//go:embed assets/vin.jpg
+	vin []byte
+
+	vinReader = tgapi.FileReader{
+		Name:   "Vin",
+		Reader: bytes.NewReader(vin),
+	}
+)
+
+func newVin(id int64) tgapi.StickerConfig {
+	return tgapi.NewSticker(id, coopReader)
 }

@@ -28,11 +28,11 @@ var tf = [...]timeFactor{
 func getFactor(days int64) uint8 {
 	var factor uint8 = 1
 
+	daysAbs := math.Abs(float64(days))
 	for _, f := range tf {
-		if int64(math.Abs(float64(days))) < int64(f.days) {
+		if int64(daysAbs) < int64(f.days) {
 			break
 		}
-
 		factor = f.factor
 	}
 
