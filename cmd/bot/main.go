@@ -147,7 +147,9 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				return err
 			}
 
-			_, err = tg.Send(newVin(userID))
+			x := newVin(userID)
+			log.Println(x)
+			_, err = tg.Send(x)
 			if err != nil {
 				return err
 			}
