@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"math"
 
 	pgx "github.com/jackc/pgx/v4"
@@ -60,42 +59,22 @@ func (pg *postgresStorage) AddUser(ctx context.Context, id int64, name string) e
 	return nil
 }
 
-func (pg *postgresStorage) UpdateUser(ctx context.Context, id int64, smokedYesteday bool) error {
-	u, err := pg.User(ctx, id)
-	if err != nil {
+func (pg *postgresStorage) UpdateUser(u User) error {
+	query := `
+	UPDATE users
+		SET name = $1, days_without_weed = $2, karma = $3, subscriptions = $4
+		WHERE id = $5;
+	`
+
+	if _, err := pg.conn.Exec(
+		context.TODO(),
+		query,
+		u.name, u.daysWithoutWeed, u.karma, u.subscriptions, u.id,
+	); err != nil {
 		return err
 	}
 
-	f := int64(getFactor(u.daysWithoutWeed))
-
-	if smokedYesteday {
-		if u.daysWithoutWeed > 0 {
-			u.daysWithoutWeed = 0
-			u.karma /= f
-		} else {
-			u.daysWithoutWeed -= 1
-			u.karma -= 10 * f
-		}
-	} else {
-		if u.daysWithoutWeed < 0 {
-			u.daysWithoutWeed = 1
-		} else {
-			u.daysWithoutWeed += 1
-		}
-		u.karma += 10 * f
-	}
-
-	log.Println("!!!", u.daysWithoutWeed, u.karma, getFactor(u.daysWithoutWeed))
-
-	query := `
-	UPDATE users
-		SET days_without_weed = $1, karma = $2
-		WHERE id=$3;
-	`
-
-	_, err = pg.conn.Exec(ctx, query, u.daysWithoutWeed, u.karma, id)
-
-	return err
+	return nil
 }
 
 func (pg *postgresStorage) User(ctx context.Context, id int64) (User, error) {
@@ -147,7 +126,8 @@ func NewPostgres(pgConnStr string) (Storage, error) {
 		id INT PRIMARY KEY,
 		name VARCHAR(32),
 		days_without_weed INT,
-		karma INT
+		karma INT,
+		subscriptions text[]
 	);`)
 	if err != nil {
 		return nil, err

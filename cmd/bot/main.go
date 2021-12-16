@@ -168,11 +168,20 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				go starDairyJob(ctx, tg, userID)
 			// Пыхал
 			case "+":
-				if err := store.UpdateUser(ctx, userID, true); err != nil {
+				user, err := store.User(ctx, userID)
+				if err != nil {
 					return err
 				}
 
-				_, err := tg.Send(tgapi.NewMessage(userID, "fuck you"))
+				karma, days := getKarma(user.daysWithoutWeed, user.karma, true)
+
+				user.karma = karma
+				user.daysWithoutWeed = days
+
+				if err := store.UpdateUser(user); err != nil {
+					return err
+				}
+				_, err = tg.Send(tgapi.NewMessage(userID, "fuck you"))
 				if err != nil {
 					return err
 				}
@@ -182,7 +191,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 
-				user, err := store.User(ctx, userID)
+				user, err = store.User(ctx, userID)
 				if err != nil {
 					return err
 				}
@@ -201,20 +210,26 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				}
 			// Не пыхал
 			case "-":
-				if err := store.UpdateUser(ctx, userID, false); err != nil {
-					return err
-				}
-
-				_, err := tg.Send(newCoop(userID))
-				if err != nil {
-					return err
-				}
-				_, err = tg.Send(tgapi.NewMessage(userID, "good for you"))
-				if err != nil {
-					return err
-				}
-
 				user, err := store.User(ctx, userID)
+				if err != nil {
+					return err
+				}
+
+				karma, daysWithoutWeed := getKarma(user.daysWithoutWeed, user.karma, false)
+
+				user.karma = karma
+				user.daysWithoutWeed = daysWithoutWeed
+
+				if err := store.UpdateUser(user); err != nil {
+					return err
+				}
+
+				_, err = tg.Send(newCoop(userID))
+				if err != nil {
+					return err
+				}
+
+				_, err = tg.Send(tgapi.NewMessage(userID, "good for you"))
 				if err != nil {
 					return err
 				}
