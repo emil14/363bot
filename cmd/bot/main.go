@@ -40,11 +40,11 @@ func main() {
 	updCfg.Timeout = 60
 	updates := tg.GetUpdatesChan(updCfg)
 
-	go func() {
-		if err := sendDairyMsg(tg); err != nil {
-			panic(err)
-		}
-	}()
+	// go func() {
+	// 	if err := sendDairyMsg(tg); err != nil {
+	// 		panic(err)
+	// 	}
+	// }()
 
 	go func() {
 		if err := startAskJob(ctx, tg); err != nil {
