@@ -378,5 +378,5 @@ var (
 )
 
 func newVin(id int64) tgapi.StickerConfig {
-	return tgapi.NewSticker(id, coopReader)
+	return tgapi.NewSticker(id, vinReader)
 }
