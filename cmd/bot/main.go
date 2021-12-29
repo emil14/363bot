@@ -148,6 +148,7 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			}
 
 			x := newVin(userID)
+			log.Println(x)
 			_, err = tg.Send(x)
 			if err != nil {
 				return err
@@ -288,19 +289,17 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 	log.Println("Start ask job")
 
 	for {
-		<-time.After(time.Minute)
-		// <-wait()
+		<-wait()
 
-		users := []int64{282857241}
-		// users, err := store.Users(ctx)
-		// if err != nil {
-		// 	return fmt.Errorf("get users: %w", err)
-		// }
+		users, err := store.Users(ctx)
+		if err != nil {
+			return fmt.Errorf("get users: %w", err)
+		}
 
 		for _, u := range users {
-			_, err := tg.Send(askAboutWeedMsg(u))
+			_, err := tg.Send(askAboutWeedMsg(u.id))
 			if err != nil {
-				log.Printf("send tg msg to user %d: %v", u, err)
+				log.Printf("send tg msg to user %d: %v", u.id, err)
 			}
 		}
 	}
@@ -379,5 +378,5 @@ var (
 )
 
 func newVin(id int64) tgapi.StickerConfig {
-	return tgapi.NewSticker(id, vinReader)
+	return tgapi.NewSticker(id, coopReader)
 }
