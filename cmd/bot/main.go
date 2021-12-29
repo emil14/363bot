@@ -288,17 +288,19 @@ func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
 	log.Println("Start ask job")
 
 	for {
-		<-wait()
+		<-time.After(time.Minute)
+		// <-wait()
 
-		users, err := store.Users(ctx)
-		if err != nil {
-			return fmt.Errorf("get users: %w", err)
-		}
+		users := []int64{282857241}
+		// users, err := store.Users(ctx)
+		// if err != nil {
+		// 	return fmt.Errorf("get users: %w", err)
+		// }
 
 		for _, u := range users {
-			_, err := tg.Send(askAboutWeedMsg(u.id))
+			_, err := tg.Send(askAboutWeedMsg(u))
 			if err != nil {
-				log.Printf("send tg msg to user %d: %v", u.id, err)
+				log.Printf("send tg msg to user %d: %v", u, err)
 			}
 		}
 	}
