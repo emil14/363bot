@@ -148,7 +148,6 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 			}
 
 			x := newVin(userID)
-			log.Println(x)
 			_, err = tg.Send(x)
 			if err != nil {
 				return err
@@ -286,6 +285,8 @@ func waitDairy() <-chan time.Time {
 }
 
 func startAskJob(ctx context.Context, tg *tgapi.BotAPI) error {
+	log.Println("Start ask job")
+
 	for {
 		<-wait()
 
@@ -376,5 +377,5 @@ var (
 )
 
 func newVin(id int64) tgapi.StickerConfig {
-	return tgapi.NewSticker(id, coopReader)
+	return tgapi.NewSticker(id, vinReader)
 }
