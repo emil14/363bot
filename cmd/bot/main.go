@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
@@ -147,12 +146,12 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 				return err
 			}
 
-			x := newVin(userID)
-			log.Println(x)
-			_, err = tg.Send(x)
-			if err != nil {
-				return err
-			}
+			// x := newVin(userID)
+			// log.Println(x)
+			// _, err = tg.Send(x)
+			// if err != nil {
+			// 	return err
+			// }
 		}
 
 		if u.CallbackQuery != nil {
@@ -186,10 +185,10 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 
-				_, err = tg.Send(newDucalis(userID))
-				if err != nil {
-					return err
-				}
+				// _, err = tg.Send(newDucalis(userID))
+				// if err != nil {
+				// 	return err
+				// }
 
 				user, err = store.User(ctx, userID)
 				if err != nil {
@@ -224,10 +223,10 @@ func handleUpdates(updates tgapi.UpdatesChannel, ctx context.Context, tg *tgapi.
 					return err
 				}
 
-				_, err = tg.Send(newCoop(userID))
-				if err != nil {
-					return err
-				}
+				// _, err = tg.Send(newCoop(userID))
+				// if err != nil {
+				// 	return err
+				// }
 
 				_, err = tg.Send(tgapi.NewMessage(userID, "good for you"))
 				if err != nil {
@@ -336,47 +335,47 @@ func wait() <-chan time.Time {
 	=========
 */
 
-// Ducalis
-var (
-	//go:embed assets/ducalis.jpg
-	ducalis []byte
+// // Ducalis
+// var (
+// 	//go:embed assets/ducalis.jpg
+// 	ducalis []byte
 
-	ducalisReader = tgapi.FileReader{
-		Name:   "Ducalis",
-		Reader: bytes.NewReader(ducalis),
-	}
-)
+// 	ducalisReader = tgapi.FileReader{
+// 		Name:   "Ducalis",
+// 		Reader: bytes.NewReader(ducalis),
+// 	}
+// )
 
-func newDucalis(id int64) tgapi.StickerConfig {
-	return tgapi.NewSticker(id, ducalisReader)
-}
+// func newDucalis(id int64) tgapi.StickerConfig {
+// 	return tgapi.NewSticker(id, ducalisReader)
+// }
 
-// Cooper
-var (
-	//go:embed assets/coop.jpg
-	coop []byte
+// // Cooper
+// var (
+// 	//go:embed assets/coop.jpg
+// 	coop []byte
 
-	coopReader = tgapi.FileReader{
-		Name:   "Cooper",
-		Reader: bytes.NewReader(coop),
-	}
-)
+// 	coopReader = tgapi.FileReader{
+// 		Name:   "Cooper",
+// 		Reader: bytes.NewReader(coop),
+// 	}
+// )
 
-func newCoop(id int64) tgapi.StickerConfig {
-	return tgapi.NewSticker(id, coopReader)
-}
+// func newCoop(id int64) tgapi.StickerConfig {
+// 	return tgapi.NewSticker(id, coopReader)
+// }
 
-// Vin
-var (
-	//go:embed assets/vin.jpg
-	vin []byte
+// // Vin
+// var (
+// 	//go:embed assets/vin.jpg
+// 	vin []byte
 
-	vinReader = tgapi.FileReader{
-		Name:   "Vin",
-		Reader: bytes.NewReader(vin),
-	}
-)
+// 	vinReader = tgapi.FileReader{
+// 		Name:   "Vin",
+// 		Reader: bytes.NewReader(vin),
+// 	}
+// )
 
-func newVin(id int64) tgapi.StickerConfig {
-	return tgapi.NewSticker(id, vinReader)
-}
+// func newVin(id int64) tgapi.StickerConfig {
+// 	return tgapi.NewSticker(id, vinReader)
+// }
